@@ -8,6 +8,7 @@ TimeStamp API with JWT authentication.
 
 ## Usage
 
+Install dependencies `npm install`.
 Start the application by running `npm run start` and go to http://localhost:3000/explorer.
 
 ## Tests
