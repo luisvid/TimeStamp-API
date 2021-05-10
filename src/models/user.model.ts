@@ -34,6 +34,7 @@ export class User extends Entity {
   lastName: string;
   username: string | undefined;
 
+  [prop: string]: any;
 
   constructor(data?: Partial<User>) {
     super(data);

@@ -1,7 +1,7 @@
 {
-  "name": "auth",
+  "name": "timestamp",
   "version": "1.0.0",
-  "description": "authentication and authorization",
+  "description": "Documents time stamping",
   "keywords": [
     "loopback-application",
     "loopback"
@@ -25,17 +25,17 @@
     "test": "lb-mocha --allow-console-logs \"dist/__tests__\"",
     "posttest": "npm run lint",
     "test:dev": "lb-mocha --allow-console-logs dist/__tests__/**/*.js && npm run posttest",
-    "docker:build": "docker build -t auth .",
-    "docker:run": "docker run -p 3000:3000 -d auth",
+    "docker:build": "docker build -t timestamp .",
+    "docker:run": "docker run -p 3000:3000 -d timestamp",
     "migrate": "node ./dist/migrate",
     "prestart": "npm run build",
-    "start": "node -r source-map-support/register .",
+    "start": "node -r dotenv/config .",
     "clean": "lb-clean dist *.tsbuildinfo .eslintcache"
   },
   "repository": {
     "type": "git"
   },
-  "author": "",
+  "author": "RO-LV",
   "license": "",
   "files": [
     "README.md",
@@ -57,18 +57,24 @@
     "@types/bcryptjs": "^2.4.2",
     "@types/lodash": "^4.14.152",
     "bcryptjs": "^2.4.3",
+    "dotenv": "^9.0.1",
     "isemail": "^3.2.0",
     "jsonwebtoken": "^8.5.1",
     "loopback-connector-mysql": "^5.4.3",
-    "tslib": "^1.10.0"
+    "loopback-connector-postgresql": "^5.3.0",
+    "nodemailer": "^6.6.0",
+    "tslib": "^1.10.0",
+    "uuid": "^8.3.2"
   },
   "devDependencies": {
     "@loopback/build": "^5.4.1",
-    "source-map-support": "^0.5.19",
+    "@loopback/eslint-config": "^7.0.1",
     "@loopback/testlab": "^3.1.5",
     "@types/node": "^10.17.24",
-    "@loopback/eslint-config": "^7.0.1",
+    "@types/nodemailer": "^6.4.1",
+    "@types/uuid": "^8.3.0",
     "eslint": "^7.0.0",
+    "source-map-support": "^0.5.19",
     "typescript": "~3.9.3"
   }
 }

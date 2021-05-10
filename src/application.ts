@@ -73,7 +73,7 @@ export class AuthApplication extends BootMixin(
     this.api({
       openapi: '3.0.0',
       info: {
-        title: 'test application',
+        title: 'Documents time stamping',
         version: '1.0.0',
       },
       paths: {},
