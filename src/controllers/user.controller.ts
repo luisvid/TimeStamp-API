@@ -56,10 +56,8 @@ export class UserController {
     const savedUser = await this.userRepository.create(userData);
 
     // await this.userRepository.userCredentials(savedUser.id).create({ password });
-    // omitir id y password de use, ver ydi-yoi
-    _.omit(savedUser, 'password')
 
-    return savedUser;
+    return _.omit(savedUser, ['id', 'password']);
   }
 
   @post('/login', {
