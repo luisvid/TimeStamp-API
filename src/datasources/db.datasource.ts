@@ -7,9 +7,9 @@ const config = {
   name: 'db',
   connector: 'postgresql',
   host: 'localhost',
-  port: 5434,
+  port: 5433,
   user: 'postgres',
-  password: 'brocal',
+  password: '12345678',
   database: 'authtest'
 };
 

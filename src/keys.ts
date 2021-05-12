@@ -2,6 +2,7 @@ import {TokenService, UserService} from '@loopback/authentication';
 import {BindingKey} from '@loopback/core';
 import {Credentials, User} from './models';
 import {PasswordHasher} from './services/hash.password';
+import {FileUploadHandler} from './types';
 
 export namespace TokenServiceConstants {
   export const TOKEN_SECRET_VALUE = '138asda8213';
@@ -31,3 +32,15 @@ export namespace UserServiceBindings {
     'services.user.service',
   );
 }
+
+/**
+ * Binding key for the file upload service
+ */
+export const FILE_UPLOAD_SERVICE = BindingKey.create<FileUploadHandler>(
+  'services.FileUpload',
+);
+
+/**
+ * Binding key for the storage directory
+ */
+export const STORAGE_DIRECTORY = BindingKey.create<string>('storage.directory');
