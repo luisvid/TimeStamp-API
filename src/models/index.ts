@@ -6,3 +6,4 @@ export * from './reset-password-init.model';
 export * from './user.model';
 
 export * from './code-verify.model';
+export * from './credentials.model';

@@ -6,8 +6,8 @@ import {UserProfile} from '@loopback/security';
 import * as _ from 'lodash';
 import {v4 as uuidv4} from 'uuid';
 import {PasswordHasherBindings, TokenServiceBindings, UserServiceBindings} from '../keys';
-import {KeyAndPassword, NodeMailer, ResetPasswordInit, User} from '../models';
-import {Credentials, UserRepository} from '../repositories';
+import {Credentials, KeyAndPassword, NodeMailer, ResetPasswordInit, User} from '../models';
+import {UserRepository} from '../repositories';
 import {validateCredentials} from '../services';
 import {EmailService} from '../services/email.service';
 import {BcryptHasher} from '../services/hash.password';
@@ -51,11 +51,10 @@ export class UserController {
     }
   })
   async signup(@requestBody() userData: User) {
-    validateCredentials(_.pick(userData, ['email', 'password']));
+    const cred = new Credentials(_.pick(userData, ['email', 'password']));
+    validateCredentials(cred);
     userData.password = await this.hasher.hashPassword(userData.password)
     const savedUser = await this.userRepository.create(userData);
-
-    // await this.userRepository.userCredentials(savedUser.id).create({ password });
 
     return _.omit(savedUser, ['id', 'password']);
   }
