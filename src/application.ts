@@ -44,6 +44,10 @@ export class AuthApplication extends BootMixin(
     });
     this.component(RestExplorerComponent);
 
+    // Configure file upload with multer options
+    this.configureFileUpload(options.fileStorageDirectory);
+
+
     this.projectRoot = __dirname;
     // Customize @loopback/boot Booter Conventions here
     this.bootOptions = {
@@ -94,7 +98,7 @@ export class AuthApplication extends BootMixin(
    */
   protected configureFileUpload(destination?: string) {
     // Upload files to `dist/.sandbox` by default
-    destination = destination ?? path.join(__dirname, '../public/files');
+    destination = destination ?? path.join(__dirname, '../../.timestampimg');
     this.bind(STORAGE_DIRECTORY).to(destination);
     const multerOptions: multer.Options = {
       storage: multer.diskStorage({
