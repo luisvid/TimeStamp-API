@@ -4,7 +4,6 @@ import {juggler} from '@loopback/repository';
 const config = {
   name: 'mssql',
   connector: 'mssql',
-  url: '',
   host: '104.248.127.17',
   port: 21799,
   user: 'renzo_api',

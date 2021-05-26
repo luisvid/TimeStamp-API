@@ -63,10 +63,10 @@
     "loopback-connector-mssql": "^3.8.0",
     "loopback-connector-mysql": "^5.4.3",
     "loopback-connector-postgresql": "^5.3.0",
+    "multer": "^1.4.2",
     "nodemailer": "^6.6.0",
     "tslib": "^2.0.0",
-    "uuid": "^8.3.2",
-    "multer": "^1.4.2"
+    "uuid": "^8.3.2"
   },
   "devDependencies": {
     "@loopback/build": "^6.2.9",
