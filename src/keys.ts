@@ -1,6 +1,6 @@
 import {TokenService, UserService} from '@loopback/authentication';
 import {BindingKey} from '@loopback/core';
-import {Credentials, User} from './models';
+import {Credentials, Usuario} from './models';
 import {PasswordHasher} from './services/hash.password';
 import {FileUploadHandler} from './types';
 
@@ -28,7 +28,7 @@ export namespace PasswordHasherBindings {
 }
 
 export namespace UserServiceBindings {
-  export const USER_SERVICE = BindingKey.create<UserService<Credentials, User>>(
+  export const USER_SERVICE = BindingKey.create<UserService<Credentials, Usuario>>(
     'services.user.service',
   );
 }

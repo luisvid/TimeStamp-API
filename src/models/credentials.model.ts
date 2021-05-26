@@ -10,7 +10,7 @@ export class Credentials extends Model {
   @property({
     type: 'string',
   })
-  password: string;
+  clave: string;
 
 
   constructor(data?: Partial<Credentials>) {

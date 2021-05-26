@@ -1,6 +1,6 @@
 import {bind, BindingScope} from '@loopback/core';
 import {createTransport} from 'nodemailer';
-import {EmailTemplate, NodeMailer, User} from '../models';
+import {EmailTemplate, NodeMailer, Usuario} from '../models';
 
 @bind({scope: BindingScope.TRANSIENT})
 export class EmailService {
@@ -18,7 +18,7 @@ export class EmailService {
       },
     });
   }
-  async sendResetPasswordMail(user: User): Promise<NodeMailer> {
+  async sendResetPasswordMail(user: Usuario): Promise<NodeMailer> {
     const transporter = await EmailService.setupTransporter();
     const emailTemplate = new EmailTemplate({
       to: user.email,
