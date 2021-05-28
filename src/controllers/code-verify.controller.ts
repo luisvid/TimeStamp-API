@@ -1,14 +1,19 @@
+import {inject} from '@loopback/core';
 import {
   repository
 } from '@loopback/repository';
-import {get, getModelSchemaRef, post, requestBody, response} from '@loopback/rest';
-import {CodeVerify} from '../models';
+import {get, getModelSchemaRef, HttpErrors, post, requestBody, response} from '@loopback/rest';
+import {CodeVerify, NodeMailer} from '../models';
 import {CodeVerifyRepository} from '../repositories';
+import {EmailService} from '../services/email.service';
 
 export class CodeVerifyController {
   constructor(
     @repository(CodeVerifyRepository)
     public codeVerifyRepository: CodeVerifyRepository,
+
+    @inject('services.EmailService')
+    public emailService: EmailService,
   ) { }
 
 
@@ -42,15 +47,41 @@ export class CodeVerifyController {
     codeVerify: Omit<CodeVerify, 'id'>,
   ): Promise<CodeVerify> {
     // return this.codeVerifyRepository.create(codeVerify);
+
     let sp = "";
+    let sendEmail = false;
+
     if (codeVerify.codigo) {
       sp = `exec dbo.sp_codigo_verifica "${codeVerify.correo}", "${codeVerify.codigo}" `;
     } else {
       sp = `exec dbo.sp_codigo_verifica "${codeVerify.correo}", null `;
+      sendEmail = true;
     }
 
-    console.log(sp);
-    return this.codeVerifyRepository.dataSource.execute(sp);
+    console.log("Ejecuta XP: " + sp);
+    const retVal = await this.codeVerifyRepository.dataSource.execute(sp);
+    console.log("SP Retorna: " + retVal[0]);
+
+    if (sendEmail && retVal[0].codigo) {
+      console.log("Enviar al email " + codeVerify.correo + " el código: " + retVal[0].codigo);
+      // Send an email to the user's email address
+
+      codeVerify.correo = "luisvid@gmail.com";
+      codeVerify.codigo = retVal[0].codigo;
+      const nodeMailer: NodeMailer = await this.emailService.sendCodigoMail(codeVerify);
+
+      // Nodemailer has accepted the request. All good
+      if (nodeMailer.accepted.length) {
+        console.log('An email with password reset instructions has been sent to the provided email');
+      } else {
+        // Nodemailer did not complete the request alert the user
+        throw new HttpErrors.InternalServerError(
+          'Error sending código email',
+        );
+      }
+    }
+
+    return codeVerify;
   }
 
   // @get('/code-verifies/count')
