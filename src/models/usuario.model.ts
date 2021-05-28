@@ -34,6 +34,11 @@ export class Usuario extends Entity {
   })
   resetKey?: string;
 
+  @property({
+    type: 'string',
+  })
+  codigo?: string;
+
   [prop: string]: any;
 
   constructor(data?: Partial<Usuario>) {

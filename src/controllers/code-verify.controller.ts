@@ -44,7 +44,7 @@ export class CodeVerifyController {
         },
       },
     })
-    codeVerify: Omit<CodeVerify, 'id'>,
+    codeVerify: CodeVerify,
   ): Promise<CodeVerify> {
 
     let sp = "";

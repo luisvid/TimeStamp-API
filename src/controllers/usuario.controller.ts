@@ -15,7 +15,6 @@ import {JWTService} from '../services/jwt-service';
 import {MyUserService} from '../services/user-service';
 import {OPERATION_SECURITY_SPEC} from '../utils/security-spec';
 
-
 export class UsuarioController {
   constructor(
     @repository(UsuarioRepository)
@@ -53,10 +52,23 @@ export class UsuarioController {
   })
   async signup(@requestBody() userData: Usuario) {
     const cred = new Credentials(_.pick(userData, ['email', 'clave']));
-
-    console.log(cred);
-
     validateCredentials(cred);
+
+    // Ejecutar SP con email y clave, si está OK obtener id referencia
+    const sp = `exec dbo.sp_codigo_verifica "${userData.email}", "${userData.codigo}" `;
+    const retVal = await this.usuarioRepository.dataSource.execute(sp);
+
+    console.log(retVal);
+
+    if (retVal[0].referencia) {
+      userData.id_referencia = retVal[0].referencia;
+      userData.codigo = undefined; //para poder grabar en la tabla acutal
+    } else {
+      return 'Error grabando usuario: ' + retVal[0].msg;
+      // throw new HttpErrors.InternalServerError(
+      //   'Error grabando usuario: ' + retVal[0].msg,
+      // );
+    }
 
     userData.clave = await this.hasher.hashPassword(userData.clave!)
     const savedUser = await this.usuarioRepository.create(userData);
