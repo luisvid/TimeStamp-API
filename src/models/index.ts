@@ -1,4 +1,3 @@
-// export * from './user.model';
 export * from './code-verify.model';
 export * from './credentials.model';
 export * from './email-template.model';

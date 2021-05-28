@@ -1,14 +1,7 @@
-import {Entity, model, property} from '@loopback/repository';
+import {Model, model, property} from '@loopback/repository';
 
 @model()
-export class CodeVerify extends Entity {
-  @property({
-    type: 'number',
-    id: true,
-    generated: true,
-  })
-  id?: number;
-
+export class CodeVerify extends Model {
   @property({
     type: 'string',
   })
@@ -18,7 +11,6 @@ export class CodeVerify extends Entity {
     type: 'string',
   })
   codigo?: string;
-
 
   constructor(data?: Partial<CodeVerify>) {
     super(data);
