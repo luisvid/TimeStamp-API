@@ -23,7 +23,7 @@ export class EmailService {
     const transporter = await EmailService.setupTransporter();
     const emailTemplate = new EmailTemplate({
       to: user.email,
-      subject: '[LB4] Reset Password Request',
+      subject: '[GreyKoda] Reset Password Request',
       html: `
       <div>
           <p>Hi there,</p>
@@ -32,7 +32,7 @@ export class EmailService {
           <a href="${process.env.APPLICATION_URL}/reset-password-finish.html?resetKey=${user.resetKey}">Reset your password link</a>
           <p>If you didn’t request to reset your password, please ignore this email or reset your password to protect your account.</p>
           <p>Thanks</p>
-          <p>LB4 team</p>
+          <p>GreyKoda team</p>
       </div>
       `,
     });
@@ -43,7 +43,7 @@ export class EmailService {
     const transporter = await EmailService.setupTransporter();
     const emailTemplate = new EmailTemplate({
       to: codeVerify.correo,
-      subject: '[LB4] Código requerido para registro',
+      subject: '[GreyKoda] Código requerido para registro',
       html: `
       <div>
           <p>Hola,</p>
@@ -52,7 +52,7 @@ export class EmailService {
           <p>${codeVerify.codigo}</p>
           <p>Si usted no solicitó este Código, por favor ignore este email.</p>
           <p>Gracias</p>
-          <p>LB4 team</p>
+          <p>GreyKoda team</p>
       </div>
       `,
     });
