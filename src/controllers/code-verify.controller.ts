@@ -59,11 +59,11 @@ export class CodeVerifyController {
     }
 
     //Ejecuto SP
-    const retVal = await this.usuarioRepository.dataSource.execute(sp);
+    const spRetVal = await this.usuarioRepository.dataSource.execute(sp);
 
     // Si el código no es informado y se genera exitosamente envía email al solicitante
-    if (sendEmail && retVal[0].codigo) {
-      codeVerify.codigo = retVal[0].codigo;
+    if (sendEmail && spRetVal[0].codigo) {
+      codeVerify.codigo = spRetVal[0].codigo;
       const nodeMailer: NodeMailer = await this.emailService.sendCodigoMail(codeVerify);
 
       // Nodemailer has accepted the request. All good
