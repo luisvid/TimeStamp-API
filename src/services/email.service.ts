@@ -11,7 +11,7 @@ export class EmailService {
     return createTransport({
       host: process.env.SMTP_SERVER,
       port: +process.env.SMTP_PORT!,
-      secure: true, //false: upgrade later with STARTTLS
+      secure: false, //false: upgrade later with STARTTLS - true: using ferozo
       auth: {
         user: process.env.SMTP_USERNAME,
         pass: process.env.SMTP_PASSWORD,
