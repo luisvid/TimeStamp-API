@@ -2,7 +2,7 @@ import {inject} from '@loopback/core';
 import {
   repository
 } from '@loopback/repository';
-import {get, getModelSchemaRef, HttpErrors, post, requestBody, response} from '@loopback/rest';
+import {getModelSchemaRef, HttpErrors, post, requestBody, response} from '@loopback/rest';
 import {CodeVerify, NodeMailer} from '../models';
 import {UsuarioRepository} from '../repositories';
 // import {CodeVerifyRepository} from '../repositories';
@@ -18,16 +18,16 @@ export class CodeVerifyController {
   ) { }
 
 
-  @get('/code-verifies/test', {
-    responses: {
-      '200': {
-        description: 'test SP executing query',
-      },
-    },
-  })
-  async test(): Promise<any> {
-    return this.usuarioRepository.dataSource.execute('exec dbo.sp_help sp_codigo_verifica');
-  }
+  // @get('/code-verifies/test', {
+  //   responses: {
+  //     '200': {
+  //       description: 'test SP executing query',
+  //     },
+  //   },
+  // })
+  // async test(): Promise<any> {
+  //   return this.usuarioRepository.dataSource.execute('exec dbo.sp_help sp_codigo_verifica');
+  // }
 
   @post('/code-verifies')
   @response(200, {

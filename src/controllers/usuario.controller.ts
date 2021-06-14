@@ -1,8 +1,6 @@
-import {authenticate, AuthenticationBindings} from '@loopback/authentication';
 import {inject} from '@loopback/core';
 import {repository} from '@loopback/repository';
-import {get, getJsonSchemaRef, HttpErrors, post, put, requestBody} from '@loopback/rest';
-import {UserProfile} from '@loopback/security';
+import {getJsonSchemaRef, HttpErrors, post, put, requestBody} from '@loopback/rest';
 import * as _ from 'lodash';
 import {v4 as uuidv4} from 'uuid';
 import {PasswordHasherBindings, TokenServiceBindings, UserServiceBindings} from '../keys';
@@ -13,7 +11,6 @@ import {EmailService} from '../services/email.service';
 import {BcryptHasher} from '../services/hash.password';
 import {JWTService} from '../services/jwt-service';
 import {MyUserService} from '../services/user-service';
-import {OPERATION_SECURITY_SPEC} from '../utils/security-spec';
 
 export class UsuarioController {
   constructor(
@@ -107,26 +104,26 @@ export class UsuarioController {
   }
 
 
-  @authenticate("jwt")
-  @get('/users/me', {
-    security: OPERATION_SECURITY_SPEC,
-    responses: {
-      '200': {
-        description: 'The current user profile',
-        content: {
-          'application/json': {
-            schema: getJsonSchemaRef(Usuario),
-          },
-        },
-      },
-    },
-  })
-  async me(
-    @inject(AuthenticationBindings.CURRENT_USER)
-    currentUser: UserProfile,
-  ): Promise<UserProfile> {
-    return Promise.resolve(currentUser);
-  }
+  // @authenticate("jwt")
+  // @get('/users/me', {
+  //   security: OPERATION_SECURITY_SPEC,
+  //   responses: {
+  //     '200': {
+  //       description: 'The current user profile',
+  //       content: {
+  //         'application/json': {
+  //           schema: getJsonSchemaRef(Usuario),
+  //         },
+  //       },
+  //     },
+  //   },
+  // })
+  // async me(
+  //   @inject(AuthenticationBindings.CURRENT_USER)
+  //   currentUser: UserProfile,
+  // ): Promise<UserProfile> {
+  //   return Promise.resolve(currentUser);
+  // }
 
 
   // We will add our password reset here

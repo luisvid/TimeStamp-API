@@ -46,8 +46,19 @@ export class StorageController {
     @requestBody.file()
     request: Request,
     @inject(RestBindings.Http.RESPONSE) response: Response,
-  ): Promise<object> {
-    return new Promise<object>((resolve, reject) => {
+  ): Promise<string> {
+
+    let sp = "";
+
+    // TODO
+    // 1- Upload a S3
+    // 2- SP insert DB
+    // 3- Call endpoints nodo sellador
+    // 4- SP Update DB
+
+
+    // 1- Upload a S3
+    await new Promise<object>((resolve, reject) => {
       const storage = multer.memoryStorage()
       const upload = multer({storage})
 
@@ -75,7 +86,16 @@ export class StorageController {
         }
       })
     })
+    console.log('fin upload S3');
 
+    // 2- SP insert DB
+
+    // armo ejecución del SP dependiendo si el codigo es informado o no
+    // sp = `exec dbo.sp_codigo_verifica "${codeVerify.correo}", "${codeVerify.codigo}" `;
+
+
+
+    return Promise.resolve('valor retorno');
   }
 
   // @get('/buckets', {

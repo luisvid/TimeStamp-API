@@ -16,6 +16,8 @@ export class EmailService {
         user: process.env.SMTP_USERNAME,
         pass: process.env.SMTP_PASSWORD,
       },
+      debug: true,
+      logger: true
     });
   }
 

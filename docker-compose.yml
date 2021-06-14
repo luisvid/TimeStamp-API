@@ -1,0 +1,15 @@
+version: "3.7"
+
+services:
+
+  api:
+    image: luisvid/timestamp
+    restart: always
+    ports:
+      - "3000:3000"
+    networks:
+      - sendfiles
+
+networks:
+  sendfiles:
+    driver: bridge
