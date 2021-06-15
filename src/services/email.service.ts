@@ -16,6 +16,10 @@ export class EmailService {
         user: process.env.SMTP_USERNAME,
         pass: process.env.SMTP_PASSWORD,
       },
+      tls: {
+        // do not fail on invalid certs
+        rejectUnauthorized: false
+      },
       debug: true,
       logger: true
     });
