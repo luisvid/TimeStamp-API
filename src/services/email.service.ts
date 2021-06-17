@@ -28,37 +28,47 @@ export class EmailService {
   async sendResetPasswordMail(user: Usuario): Promise<NodeMailer> {
     const transporter = await EmailService.setupTransporter();
     const emailTemplate = new EmailTemplate({
+      // from: 'soporte@colmedmobile.com',
+      from: 'sistemas@colmed5.org.ar',
       to: user.email,
-      subject: '[GreyKoda] Reset Password Request',
+      subject: 'SOLICITUD DE CAMBIO DE CLAVE - Colmed Mobile',
       html: `
       <div>
-          <p>Hi there,</p>
-          <p style="color: red;">We received a request to reset the password for your account</p>
-          <p>To reset your password click on the link provided below</p>
-          <a href="${process.env.APPLICATION_URL}/reset-password-finish.html?resetKey=${user.resetKey}">Reset your password link</a>
-          <p>If you didn’t request to reset your password, please ignore this email or reset your password to protect your account.</p>
-          <p>Thanks</p>
-          <p>GreyKoda team</p>
+        <h2>Estimado/a</h2>
+        <h2>${user.n_usuario}</h2>
+        <p>Ud. ha solicitado cambio de clave como usuario de Colmed Mobile.</p>
+        <p>Para modificar debe ingresar en
+        <a href="${process.env.APPLICATION_URL}/reset-password-finish.html?resetKey=${user.resetKey}" target="_blank">Cambiar contraseña</a>
+        <p>Y a continuación, deberá ingresar los datos que pide la página.</p>
+        <p>Saludos cordiales</p>
+        <p><strong>Cualquier inconveniente puede escribir a este correo.</strong></p>
+        <img src="https://documentos.greykoda.com/greykoda/logo-nombre.png" alt="GreyKoda Logo">
       </div>
       `,
     });
     return transporter.sendMail(emailTemplate);
   }
 
-  async sendCodigoMail(codeVerify: CodeVerify): Promise<NodeMailer> {
+  async sendCodigoMail(codeVerify: CodeVerify, nombre: string): Promise<NodeMailer> {
     const transporter = await EmailService.setupTransporter();
     const emailTemplate = new EmailTemplate({
       to: codeVerify.correo,
-      subject: '[GreyKoda] Código requerido para registro',
+      // from: 'no-reply@colmedmobile.com',
+      from: 'sistemas@colmed5.org.ar',
+      subject: 'SOLICITUD DE CÓDIGO - Colmed Mobile',
       html: `
       <div>
-          <p>Hola,</p>
-          <p style="color: red;">Recibimos una solicitud de registro</p>
-          <p>El código necesario para completar el registro es el siguiente</p>
-          <p>${codeVerify.codigo}</p>
-          <p>Si usted no solicitó este Código, por favor ignore este email.</p>
-          <p>Gracias</p>
-          <p>GreyKoda team</p>
+        <h2>Estimado/a</h2>
+        <h2>${nombre}</h2>
+        <p>Ud. ha solicitado código para registrarse como usuario de Colmed Mobile.</p>
+        <p><b>Su código es : ${codeVerify.codigo}</b></p>
+        <p>Para continuar el registro deberá ingresar en
+        <a href="https://colmedmobile.com/" target="_blank">https://colmedmobile.com</a> </p>
+        <p>Y a continuación, deberá ingresar los datos que pide la página.</p>
+        <p>Esperamos que la aplicación sea de su agrado y lo ayude en su actividad profesional.</p>
+        <p>Saludos cordiales</p>
+        <p><strong>No debe responder este correo.</strong></p>
+        <img src="https://documentos.greykoda.com/greykoda/logo-nombre.png" alt="GreyKoda Logo">
       </div>
       `,
     });

@@ -10,7 +10,7 @@ export class EmailTemplate extends Entity {
   @property({
     type: 'string',
   })
-  from = 'sistemas@colmed5.org.ar';
+  from: string;
 
   @property({
     type: 'string',

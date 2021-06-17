@@ -64,7 +64,7 @@ export class CodeVerifyController {
     // Si el código no es informado y se genera exitosamente envía email al solicitante
     if (sendEmail && spRetVal[0].codigo) {
       codeVerify.codigo = spRetVal[0].codigo;
-      const nodeMailer: NodeMailer = await this.emailService.sendCodigoMail(codeVerify);
+      const nodeMailer: NodeMailer = await this.emailService.sendCodigoMail(codeVerify, spRetVal[0].nombre);
 
       // Nodemailer has accepted the request. All good
       if (nodeMailer.accepted.length) {
