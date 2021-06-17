@@ -45,6 +45,8 @@ export class StorageController {
   })
   async fileUpload(
     @requestBody.file()
+    // Necesitamos capturar un parametro para la descripción del documento (opcional)
+    // Necesitamos capturar un parametro para el nombre documento (requerido)
     request: Request,
     @inject(RestBindings.Http.RESPONSE) response: Response,
   ): Promise<string> {
@@ -76,14 +78,14 @@ export class StorageController {
             const params = {
               Bucket: bucketName!,
               ACL: 'public-read',
-              Key: file.originalname, // File name you want to save as in S3
+              Key: file.originalname, // Debe ser el enviado por parametro
               Body: bufferToStream(file.buffer)
             }
             try {
               const stored = await s3.upload(params).promise()
               console.log(stored);
               res.push(stored)
-              fileName = stored.Key;
+              fileName = stored.Key; // Debe ser el enviado por parametro
               location = stored.Location;
             } catch (err) {
               reject(err)
@@ -128,11 +130,11 @@ export class StorageController {
       "0",
       "${hashFile}",
       "",
-      "${fileName}",
+      "${fileName}", // Debe ir el dato con el que el usuario quiere guardar el doc
       "${location}"
-      "${Date.now()}"
+      "${Date.now()}" // Revisar que sea Date + Time, no solo Date
       "${usuario.id}" // ¿ Cómo obtengo el ID del usuario ?
-      ""
+      "${descripcion}"
       `;
     // ¿ Habría que crear un modelo storage.model.ts ?
     // ¿ Habría que crear un repositorio storage.repository.ts ?
@@ -146,8 +148,11 @@ export class StorageController {
     const arpiurl = "aca_va_la_IP_de_la_api";
     const stampUrl = `${apiurl}/stamp`
 
+    // *** Puede que demore ***
+    // Resolver mediante peticiones asíncronas
     axios.post(stampUrl, {
       hashes: allHashes
+      // A futuro se puede enviar un API KEY
     }).then(function (response) {
       if (response.data.status == 'ok') {
         //Itero por los archivos que me retorno el metodo stamp de la api rest
@@ -164,28 +169,43 @@ export class StorageController {
             txResponse.status = response.data.txHash[k].status;
             txResponse.timestamp = response.data.txHash[k].timestamp;
 
-            if (response.data.txHash[k].status == 'stamped') {
-              txResponse.tx_hash = response.data.txHash[k].tx_hash;
+            // 5- SP Update DB
+            let updatedData = {
+              p_bfa_block_number: txResponse.block,
+              p_bfa_block_timestamp: txResponse.timestamp,
+              p_bfa_who_stamped: txResponse.who_stamped, // Esto sería fijo, debería ir el address que tienen en la AP. Renzo lo revisa
             }
+
+            await this.storageRepository.updateById(savedDocument.id, updatedData);
+
+
           }
         }
 
       }
     }
 
-
-
-    // 5- SP Update DB
-    let updatedData = {
-      p_bfa_block_number: txResponse.block,
-      p_bfa_block_timestamp: txResponse.timestamp,
-      p_bfa_who_stamped: txResponse.who_stamped, // Esto sería fijo, debería ir el address que tienen en la AP. Renzo lo revisa
-    }
-
-    await this.storageRepository.updateById(savedDocument.id, updatedData);
+    // Retorno parcial al fron-ent ->
+    // DOCUMENTO UPLOAD OK,
+    // DOC SAVE DB OK,
+    // DOC STAMPED PENDING
 
     return Promise.resolve('valor retorno');
   }
+
+
+
+  // endpoint de búsqueda por archivo
+  // todos los docs del usuario usuarioID (obtenido de TOKEN)
+  // A futuro permitir filtros, límites, fechas
+  // LA SP hace internamente el like
+  /*ALTER Procedure [dbo].[sp_bfa_documento_select](
+    @p_bfa_block_number varchar(100) = 0, // Si mandamos 0, es xq queremos los que estan sin estampar, sin importar usuario
+    @p_id_documento int = Null,
+    @p_n_documento varchar(200) = Null,
+    @p_id_usuario int = NUll, // Tomar desde el token
+    @p_descripcion varchar(400) = Null
+    )*/
 
   // @get('/buckets', {
   //   responses: {
