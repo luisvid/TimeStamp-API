@@ -1,9 +1,14 @@
+import {authenticate, AuthenticationBindings} from '@loopback/authentication'
 import {inject} from '@loopback/core'
+import {repository} from '@loopback/repository'
 import {post, Request, requestBody, Response, RestBindings} from '@loopback/rest'
+// import {UserProfile} from 'aws-sdk/clients/opsworks'
+import {UserProfile} from '@loopback/security'
 import AWS from 'aws-sdk'
 import crypto from 'crypto'
 import multer from 'multer'
 import stream from 'stream'
+import {UsuarioRepository} from '../repositories'
 
 const {Duplex} = stream
 
@@ -12,6 +17,14 @@ function bufferToStream(buffer: any) {
   duplexStream.push(buffer)
   duplexStream.push(null)
   return duplexStream
+}
+
+function getHashFromFile(file: any) {
+  // https://emn178.github.io/online-tools/sha256_checksum.html
+  const fileBuffer = file.buffer;
+  const objectCrypto = crypto.createHash('sha256');
+  objectCrypto.update(fileBuffer);
+  return objectCrypto.digest('hex');
 }
 
 const config = {
@@ -25,10 +38,48 @@ const bucketName = process.env.S3_BUCKET;
 const s3 = new AWS.S3(config)
 export class StorageController {
 
-  constructor() {
+  constructor(
+    @repository(UsuarioRepository)
+    public usuarioRepository: UsuarioRepository,
+
+  ) { }
+
+
+  @authenticate("jwt")
+  @post('/filesx', {
+    responses: {
+      200: {
+        content: {
+          'application/json': {
+            schema: {
+              type: 'object',
+            },
+          },
+        },
+        description: 'Files and fields',
+      },
+    },
+  })
+  async fileUploadX(
+    @requestBody.file()
+    request: Request,
+    @inject(RestBindings.Http.RESPONSE) response: Response,
+    @inject(AuthenticationBindings.CURRENT_USER) currentUser: UserProfile,
+  ): Promise<UserProfile> {
+
+
+    console.log(currentUser.name);
+    console.log(currentUser.id);
+
+
+    return currentUser;
   }
 
+
   // file upload to S3
+  // params: name & desc
+  // http://localhost:3000/files/?name=unNombre&desc=UnaDescripcion
+  @authenticate("jwt")
   @post('/files', {
     responses: {
       200: {
@@ -45,27 +96,33 @@ export class StorageController {
   })
   async fileUpload(
     @requestBody.file()
-    // Necesitamos capturar un parametro para la descripción del documento (opcional)
-    // Necesitamos capturar un parametro para el nombre documento (requerido)
     request: Request,
     @inject(RestBindings.Http.RESPONSE) response: Response,
+    @inject(AuthenticationBindings.CURRENT_USER) currentUser: UserProfile,
   ): Promise<string> {
 
     let sp = "";
-    let hashFile = "";
-    let fileName = "";
-    let location = "";
-    let allHashes = []; // ' Cómo se declararn los arrays en TS ?
+    let fileHash = "";
+    let fileName = "";  //request.query.name ?? "";
+    let fileDescription = request.query.desc ?? " ";
+    let fileLocation = "";
+    let allHashes: Array<string> = [];
+
+
+    console.log(currentUser);
+    console.log("Nombre Archivo: " + fileName);
+    console.log("Descripción Archivo: " + fileDescription);
+
 
     // TODO
-    // 1- Upload a S3
-    // 2- Obtener HASH
+    // 1- Obtener HASH
+    // 2- Upload a S3
     // 3- SP insert DB
     // 4- Call endpoints nodo sellador
     // 5- SP Update DB
 
 
-    // 1- Upload a S3
+    // 2- Upload a S3
     await new Promise<object>((resolve, reject) => {
       const storage = multer.memoryStorage()
       const upload = multer({storage})
@@ -75,32 +132,26 @@ export class StorageController {
         else {
           let res = new Array()
           for (const file of (request as any).files) {
+            // 1 - Get HASH FILE
+            fileHash = getHashFromFile(file);
+            allHashes.push(fileHash)
+            fileName = request.query.name ?? file.originalname;
+
             const params = {
               Bucket: bucketName!,
               ACL: 'public-read',
-              Key: file.originalname, // Debe ser el enviado por parametro
+              Key: fileHash,
               Body: bufferToStream(file.buffer)
             }
+
             try {
               const stored = await s3.upload(params).promise()
               console.log(stored);
               res.push(stored)
-              fileName = stored.Key; // Debe ser el enviado por parametro
-              location = stored.Location;
+              fileLocation = stored.Location;
             } catch (err) {
               reject(err)
             }
-
-            // 2 - Get HASH FILE
-            const fileBuffer = file.buffer;
-            const objectCrypto = crypto.createHash('sha256');
-            objectCrypto.update(fileBuffer);
-            hashFile = objectCrypto.digest('hex');
-            // Esto anda 10 puntos. Probé el hash obtenido
-            // comparando con la web https://emn178.github.io/online-tools/sha256_checksum.html
-            console.log("Hash File:", hashFile);
-            // Agrego al array de hashes para enviar a la API de sello de tiempo
-            allHashes.push(hashFile)
 
           }
           resolve(res)
@@ -110,87 +161,77 @@ export class StorageController {
     console.log('fin upload S3');
 
     // 3- SP insert DB
-    /* EJEMPLO DEL SP
-    Procedure [dbo].[sp_bfa_documento_insert](
-    @p_bfa_block_number varchar(100) = '',
-    @p_bfa_block_timestamp varchar(100) = '',
-    @p_bfa_hash varchar(100) = '', *** REQUERIDO ****
-    @p_bfa_who_stamped varchar(100) = '',
-    @p_n_documento varchar(200), *** REQUERIDO ****
-    @p_n_adjunto varchar(200), *** REQUERIDO ****
-    @p_fecha datetime, *** REQUERIDO ****
-    @p_id_usuario bigint = Null, *** REQUERIDO ****
-    @p_descripcion varchar(400) = Null *** REQUERIDO ****
-    )
-    */
 
-    // ¿ Están bien ordenados los parámetros ?
+    // sp = `exec dbo.sp_codigo_verifica "${codeVerify.correo}", "${codeVerify.codigo}" `;
+    let today = new Date();
+
     sp = `exec dbo.sp_bfa_documento_insert
-      "0",
-      "0",
-      "${hashFile}",
-      "",
-      "${fileName}", // Debe ir el dato con el que el usuario quiere guardar el doc
-      "${location}"
-      "${Date.now()}" // Revisar que sea Date + Time, no solo Date
-      "${usuario.id}" // ¿ Cómo obtengo el ID del usuario ?
-      "${descripcion}"
-      `;
-    // ¿ Habría que crear un modelo storage.model.ts ?
-    // ¿ Habría que crear un repositorio storage.repository.ts ?
-    const savedDocument = await this.storageRepository.dataSource.execute(sp);
+            @p_bfa_hash = "${fileHash}",
+            @p_n_documento = "${fileName}",
+            @p_n_adjunto = "${fileLocation.slice(-127)}",
+            @p_fecha = "${today.toISOString().split('T')[0]}",
+            @p_id_usuario = "${currentUser.id}",
+            @p_descripcion = "${fileDescription}"`;
+
+    console.log(sp);
+    const spRetVal = await this.usuarioRepository.dataSource.execute(sp);
+    console.log(spRetVal);
 
 
-    // 4 - Call endpoints nodo sellador
-    // ¿ Luis tenes algún ejemplo de como invocar una API desde Loopback 4 ?
-    // Dejo este ejemplo de cómo lo haría desde Sails JS con AXIOS
-    let txResponse = [];
-    const arpiurl = "aca_va_la_IP_de_la_api";
-    const stampUrl = `${apiurl}/stamp`
-
-    // *** Puede que demore ***
-    // Resolver mediante peticiones asíncronas
-    axios.post(stampUrl, {
-      hashes: allHashes
-      // A futuro se puede enviar un API KEY
-    }).then(function (response) {
-      if (response.data.status == 'ok') {
-        //Itero por los archivos que me retorno el metodo stamp de la api rest
-        for (let k = 0; k < response.data.txHash.length; k++) {
-
-          let hash = hashFile;
-          if (!hash.startsWith('0x')) {
-            hash = '0x' + hash; // Para iniciar el hash en formato 0x
-          }
-
-          // Parseo info obtenida
-          if (hash == response.data.txHash[k].hash) {
-            txResponse.block = response.data.txHash[k].block_number;
-            txResponse.status = response.data.txHash[k].status;
-            txResponse.timestamp = response.data.txHash[k].timestamp;
-
-            // 5- SP Update DB
-            let updatedData = {
-              p_bfa_block_number: txResponse.block,
-              p_bfa_block_timestamp: txResponse.timestamp,
-              p_bfa_who_stamped: txResponse.who_stamped, // Esto sería fijo, debería ir el address que tienen en la AP. Renzo lo revisa
-            }
-
-            await this.storageRepository.updateById(savedDocument.id, updatedData);
 
 
-          }
-        }
 
-      }
-    }
+    // // 4 - Call endpoints nodo sellador
+    // // ¿ Luis tenes algún ejemplo de como invocar una API desde Loopback 4 ?
+    // // Dejo este ejemplo de cómo lo haría desde Sails JS con AXIOS
+    // let txResponse = [];
+    // const arpiurl = "aca_va_la_IP_de_la_api";
+    // const stampUrl = `${apiurl}/stamp`
+
+    // // *** Puede que demore ***
+    // // Resolver mediante peticiones asíncronas
+    // axios.post(stampUrl, {
+    //   hashes: allHashes
+    //   // A futuro se puede enviar un API KEY
+    // }).then(function (response) {
+    //   if (response.data.status == 'ok') {
+    //     //Itero por los archivos que me retorno el metodo stamp de la api rest
+    //     for (let k = 0; k < response.data.txHash.length; k++) {
+
+    //       let hash = hashFile;
+    //       if (!hash.startsWith('0x')) {
+    //         hash = '0x' + hash; // Para iniciar el hash en formato 0x
+    //       }
+
+    //       // Parseo info obtenida
+    //       if (hash == response.data.txHash[k].hash) {
+    //         txResponse.block = response.data.txHash[k].block_number;
+    //         txResponse.status = response.data.txHash[k].status;
+    //         txResponse.timestamp = response.data.txHash[k].timestamp;
+
+    //         // 5- SP Update DB
+    //         let updatedData = {
+    //           p_bfa_block_number: txResponse.block,
+    //           p_bfa_block_timestamp: txResponse.timestamp,
+    //           p_bfa_who_stamped: txResponse.who_stamped,
+    //         }
+
+    //         // ejecuta SP Update
+    //         await this.storageRepository.updateById(savedDocument.id, updatedData);
+
+
+    //       }
+    //     }
+
+    //   }
+    // }
 
     // Retorno parcial al fron-ent ->
     // DOCUMENTO UPLOAD OK,
     // DOC SAVE DB OK,
     // DOC STAMPED PENDING
 
-    return Promise.resolve('valor retorno');
+    return Promise.resolve(fileHash);
   }
 
 

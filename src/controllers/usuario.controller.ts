@@ -1,6 +1,10 @@
+import {authenticate, AuthenticationBindings} from '@loopback/authentication';
+import {OPERATION_SECURITY_SPEC} from '@loopback/authentication-jwt';
 import {inject} from '@loopback/core';
 import {repository} from '@loopback/repository';
-import {getJsonSchemaRef, HttpErrors, post, put, requestBody} from '@loopback/rest';
+import {get, getJsonSchemaRef, HttpErrors, post, put, requestBody} from '@loopback/rest';
+// import {UserProfile} from 'aws-sdk/clients/opsworks';
+import {UserProfile} from '@loopback/security';
 import * as _ from 'lodash';
 import {v4 as uuidv4} from 'uuid';
 import {PasswordHasherBindings, TokenServiceBindings, UserServiceBindings} from '../keys';
@@ -104,26 +108,27 @@ export class UsuarioController {
   }
 
 
-  // @authenticate("jwt")
-  // @get('/users/me', {
-  //   security: OPERATION_SECURITY_SPEC,
-  //   responses: {
-  //     '200': {
-  //       description: 'The current user profile',
-  //       content: {
-  //         'application/json': {
-  //           schema: getJsonSchemaRef(Usuario),
-  //         },
-  //       },
-  //     },
-  //   },
-  // })
-  // async me(
-  //   @inject(AuthenticationBindings.CURRENT_USER)
-  //   currentUser: UserProfile,
-  // ): Promise<UserProfile> {
-  //   return Promise.resolve(currentUser);
-  // }
+  @authenticate("jwt")
+  @get('/users/me', {
+    security: OPERATION_SECURITY_SPEC,
+    responses: {
+      '200': {
+        description: 'The current user profile',
+        content: {
+          'application/json': {
+            schema: getJsonSchemaRef(Usuario),
+          },
+        },
+      },
+    },
+  })
+  async me(
+    @inject(AuthenticationBindings.CURRENT_USER)
+    currentUser: UserProfile,
+  ): Promise<UserProfile> {
+    console.log(currentUser);
+    return Promise.resolve(currentUser);
+  }
 
 
   // We will add our password reset here
