@@ -4,7 +4,7 @@ import {juggler} from '@loopback/repository';
 const config = {
   name: 'stamp_api',
   connector: 'rest',
-  baseURL: 'http://165.232.157.193:3000/',
+  baseURL: 'http://165.232.157.193:3000/', //'http://nodocolmed.greykoda.com:3000/',
   crud: false,
   options: {
     headers: {
@@ -16,28 +16,30 @@ const config = {
     {
       template: {
         method: 'GET',
-        url: 'http://165.232.157.193:3000/users/{userId}',
-      },
-      functions: {
-        getUser: ['userId'],
-      },
-    },
-    {
-      template: {
-        method: 'GET',
-        url: 'http://165.232.157.193:3000/wines/{wineId}',
-      },
-      functions: {
-        getWine: ['wineId'],
-      },
-    },
-    {
-      template: {
-        method: 'GET',
         url: 'http://165.232.157.193:3000/qrstatus/{qr_id}',
       },
       functions: {
         getQrStatus: ['qr_id'],
+      },
+    },
+    {
+      template: {
+        method: "POST",
+        url: "http://165.232.157.193:3000/login",
+        body: '{arg}',
+      },
+      functions: {
+        loginx: ['arg']
+      },
+    },
+    {
+      template: {
+        method: 'POST',
+        url: 'http://nodocolmed.greykoda.com:3000/stamp',
+        body: '{arg}',
+      },
+      functions: {
+        postStamp: ['arg'],
       },
     },
   ],

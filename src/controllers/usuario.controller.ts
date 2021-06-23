@@ -96,10 +96,10 @@ export class UsuarioController {
   ): Promise<{token: string}> {
     // make sure user exist,password should be valid
     const user = await this.userService.verifyCredentials(credentials);
-    console.log(user);
+    // console.log(user);
 
     const userProfile = await this.userService.convertToUserProfile(user);
-    console.log(userProfile);
+    // console.log(userProfile);
 
     // create a JSON Web Token based on the user profile
     const token = await this.jwtService.generateToken(userProfile);
@@ -126,7 +126,7 @@ export class UsuarioController {
     @inject(AuthenticationBindings.CURRENT_USER)
     currentUser: UserProfile,
   ): Promise<UserProfile> {
-    console.log(currentUser);
+    // console.log(currentUser);
     return Promise.resolve(currentUser);
   }
 
@@ -157,16 +157,16 @@ export class UsuarioController {
 
     try {
       // Updates the user to store their reset key with error handling
-      console.log("Updates the user to store their reset key with error handling");
+      // console.log("Updates the user to store their reset key with error handling");
       await this.usuarioRepository.updateById(foundUser.id_usuario, foundUser);
 
     } catch (e) {
-      console.log("error: " + e);
+      // console.log("error: " + e);
       return e;
     }
 
     // Send an email to the user's email address
-    console.log("Send an email to the user's email address");
+    // console.log("Send an email to the user's email address");
     const nodeMailer: NodeMailer = await this.emailService.sendResetPasswordMail(
       foundUser,
     );
