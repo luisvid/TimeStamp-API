@@ -103,7 +103,7 @@ export class StorageController {
     request: Request,
     @inject(RestBindings.Http.RESPONSE) response: Response,
     @inject(AuthenticationBindings.CURRENT_USER) currentUser: UserProfile,
-  ): Promise<string> {
+  ): Promise<Array<string>> {
 
     let sp = "";
     let fileHash = "";
@@ -111,6 +111,7 @@ export class StorageController {
     let fileDescription = request.query.desc ?? " ";
     let fileLocation = "";
     let allHashes: Array<string> = [];
+    let arrLocations: Array<string> = [];
     // let hashesID: Array<string | number> = [];
     let hashesID: {key: string, value: string}[] = [];
     let today = new Date();
@@ -138,16 +139,19 @@ export class StorageController {
         if (err) reject(err)
         else {
           let res = new Array()
+          let cont = 1;
           for (const file of (request as any).files) {
             // 1 - Get HASH FILE
             fileHash = getHashFromFile(file);
             allHashes.push(fileHash)
             fileName = request.query.name ?? file.originalname;
+            fileName = fileName + cont + file.originalname.slice(-4);
+            cont++;
 
             const params = {
               Bucket: bucketName!,
               ACL: 'public-read',
-              Key: fileHash,
+              Key: fileHash + file.originalname.slice(-4),
               Body: bufferToStream(file.buffer)
             }
 
@@ -156,6 +160,7 @@ export class StorageController {
               console.log(stored);
               res.push(stored)
               fileLocation = stored.Location;
+              arrLocations.push(fileLocation);
             } catch (err) {
               reject(err)
             }
@@ -164,7 +169,7 @@ export class StorageController {
             sp = `exec dbo.sp_bfa_documento_insert
               @p_bfa_hash = "${fileHash}",
               @p_n_documento = "${fileName}",
-              @p_n_adjunto = "${fileLocation.slice(-128)}",
+              @p_n_adjunto = "${fileLocation.slice(-300)}",
               @p_fecha = "${today.toISOString().split('T')[0]}",
               @p_id_usuario = "${currentUser.id}",
               @p_descripcion = "${fileDescription}"`;
@@ -218,8 +223,9 @@ export class StorageController {
 
     // Retorno parcial al fron-ent ->
     const strRet = 'DOCUMENTO UPLOAD OK, DOC SAVE DB OK, DOC STAMPED PENDING'
+    arrLocations.push(strRet);
 
-    return Promise.resolve(strRet);
+    return Promise.resolve(arrLocations);
   }
 
 
