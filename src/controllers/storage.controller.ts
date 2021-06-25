@@ -48,38 +48,6 @@ export class StorageController {
 
   ) { }
 
-
-  @authenticate("jwt")
-  @post('/filesx', {
-    responses: {
-      200: {
-        content: {
-          'application/json': {
-            schema: {
-              type: 'object',
-            },
-          },
-        },
-        description: 'Files and fields',
-      },
-    },
-  })
-  async fileUploadX(
-    @requestBody.file()
-    request: Request,
-    @inject(RestBindings.Http.RESPONSE) response: Response,
-    @inject(AuthenticationBindings.CURRENT_USER) currentUser: UserProfile,
-  ): Promise<UserProfile> {
-
-
-    console.log(currentUser.name);
-    console.log(currentUser.id);
-
-
-    return currentUser;
-  }
-
-
   // file upload to S3
   // params: name & desc
   // http://localhost:3000/files/?name=unNombre&desc=UnaDescripcion
@@ -103,7 +71,7 @@ export class StorageController {
     request: Request,
     @inject(RestBindings.Http.RESPONSE) response: Response,
     @inject(AuthenticationBindings.CURRENT_USER) currentUser: UserProfile,
-  ): Promise<string> {
+  ): Promise<Array<string>> {
 
     let sp = "";
     let fileHash = "";
@@ -111,6 +79,7 @@ export class StorageController {
     let fileDescription = request.query.desc ?? " ";
     let fileLocation = "";
     let allHashes: Array<string> = [];
+    let arrLocations: Array<string> = [];
     // let hashesID: Array<string | number> = [];
     let hashesID: {key: string, value: string}[] = [];
     let today = new Date();
@@ -138,16 +107,19 @@ export class StorageController {
         if (err) reject(err)
         else {
           let res = new Array()
+          let cont = 1;
           for (const file of (request as any).files) {
             // 1 - Get HASH FILE
             fileHash = getHashFromFile(file);
             allHashes.push(fileHash)
             fileName = request.query.name ?? file.originalname;
+            fileName = fileName + cont + file.originalname.slice(-4);
+            cont++;
 
             const params = {
               Bucket: bucketName!,
               ACL: 'public-read',
-              Key: fileHash,
+              Key: fileHash + file.originalname.slice(-4),
               Body: bufferToStream(file.buffer)
             }
 
@@ -156,6 +128,7 @@ export class StorageController {
               console.log(stored);
               res.push(stored)
               fileLocation = stored.Location;
+              arrLocations.push(fileLocation);
             } catch (err) {
               reject(err)
             }
@@ -218,8 +191,9 @@ export class StorageController {
 
     // Retorno parcial al fron-ent ->
     const strRet = 'DOCUMENTO UPLOAD OK, DOC SAVE DB OK, DOC STAMPED PENDING'
+    arrLocations.push(strRet);
 
-    return Promise.resolve(strRet);
+    return Promise.resolve(arrLocations);
   }
 
 
