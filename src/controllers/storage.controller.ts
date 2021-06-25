@@ -236,6 +236,37 @@ export class StorageController {
     @p_descripcion varchar(400) = Null
     )*/
 
+  @authenticate("jwt")
+  @post('/search_file', {
+    responses: {
+      200: {
+        content: {
+          'application/json': {
+            schema: {
+              type: 'object',
+            },
+          },
+        },
+        description: 'Search files',
+      },
+    },
+  })
+  async searchFile(
+    @inject(AuthenticationBindings.CURRENT_USER) currentUser: UserProfile,
+    nombre: String,
+  ): Promise<string> {
 
+    // updates DB
+    let sp = `exec dbo.sp_bfa_documento_select
+    @p_n_documento = "${nombre}",
+    @p_id_usuario = "${currentUser.id}"`;
+
+    console.log(sp);
+    const documentFind = await this.usuarioRepository.dataSource.execute(sp);
+    console.log(documentFind);
+
+    return Promise.resolve(documentFind);
+
+  }
 
 }
