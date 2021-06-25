@@ -69,6 +69,7 @@ export class CodeVerifyController {
       // Nodemailer has accepted the request. All good
       if (nodeMailer.accepted.length) {
         console.log("Se envió un email a " + codeVerify.correo + " con el código: " + codeVerify.codigo);
+        // NOTIFICAR ESTA ACCIÓN AL USUARIO, NO SOLO CON UN STATUS 200, SINO CON ALGUN MSJE EXTRA
       } else {
         // Nodemailer did not complete the request alert the user
         throw new HttpErrors.InternalServerError(

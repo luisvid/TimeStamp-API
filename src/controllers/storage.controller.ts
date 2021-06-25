@@ -95,7 +95,8 @@ export class StorageController {
     // 2- Upload a S3
     // 3- SP insert DB
     // 4- Call endpoints nodo sellador
-    // 5- SP Update DB
+    // 5- Call endpoints nodo verificador
+    // 6- SP Update DB
 
 
     // 2- Upload a S3
@@ -137,7 +138,7 @@ export class StorageController {
             sp = `exec dbo.sp_bfa_documento_insert
               @p_bfa_hash = "${fileHash}",
               @p_n_documento = "${fileName}",
-              @p_n_adjunto = "${fileLocation.slice(-128)}",
+              @p_n_adjunto = "${fileLocation.slice(-128)}", //# Guardar campo n_adjunto solo nombre del archivo + extensión
               @p_fecha = "${today.toISOString().split('T')[0]}",
               @p_id_usuario = "${currentUser.id}",
               @p_descripcion = "${fileDescription}"`;
@@ -154,7 +155,6 @@ export class StorageController {
     console.log('fin upload S3');
     console.log(hashesID);
 
-
     // 4 - Call endpoints nodo sellador
     let stampHashes: MyStampHashes = {
       hashes: allHashes
@@ -164,8 +164,48 @@ export class StorageController {
     console.log(txRetVal);
 
 
+    // Luego de sellar, debemos invocar al metodo verify para obtener los siguientes datos
+    // p_bfa_block_number
+    // p_bfa_block_timestamp
+    // p_bfa_who_stamped
+
+    // La verificación se puede hacer luego de que la TX sea insertada en un bloque, por lo que
+    // se debe esperar al menos 5 segundos, antes de invocar al método verify
+
+    // ESPERAR 5 SEGUNDOS
+
+    let limiteVueltas = 15; // Establecemos un límite de la máxima cantidad de veces que se hará el do-while
+    let acumuladorVueltas = 0; // Variable de corte de do-while
+    let finishDoWhile = false;
+    let txVerify;
+
+    /*do {
+
+      // Por cada hash enviado
+      stampHashes.forEach(hash: => {
+        // Invocamos al metodo verify por GET EJEMPLO: http://nodocolmed.greykoda.com:3000/verify/HASH
+        txVerify = await this.stampApiService.getVerify(hash);
+
+        if(txVerify.data.status == 'completed'){
+          finishDoWhile = true;
+        } else {
+          acumuladorVueltas++;
+        }
+
+        // ESPERAR 1 SEGUNDO
+
+        if (acumuladorVueltas > limiteVueltas) {
+          finishDoWhile = true;
+        }
+      });
+    } while(!finishDoWhile);*/
+
+    // NO IMPORTA SI LA API DEMORA EN TERMINAR LA EJECUCIÓN, ESO SERÁ UN PROBLEMA DEL FRONTEND !! YA ESTÁ HABLADO CON LEO
+
     // 5- SP Update DB
-    if (txRetVal.status == 'ok') {
+    // ACTUALIZAR BD SI LA COMPROBACION DEL VERIFY DIO COMPLETED
+
+    if (txRetVal.status == 'ok') { // MODIFICAR ESTA CONDICIÓN
       //Itero el array de hashes enviado
       console.log("estado OK, itero");
       for (let i = 0; i < hashesID.length; i++) {
@@ -178,9 +218,9 @@ export class StorageController {
           // updates DB
           sp = `exec dbo.sp_bfa_documento_update
             @p_id_documento = "${hashesID[i].value}",
-            @p_bfa_block_number = "${txOjb.block_number._hex}",
-            @p_bfa_block_timestamp = "${today}",
-            @p_bfa_who_stamped = "${currentUser.name}"`;
+            @p_bfa_block_number = "${txOjb.block_number._hex}", // OBTENER DE txVerify
+            @p_bfa_block_timestamp = "${today}", // OBTENER DE txVerify
+            @p_bfa_who_stamped = "${currentUser.name}"`; // OBTENER DE txVerify
 
           console.log(sp);
           const spUpdateRetVal = await this.usuarioRepository.dataSource.execute(sp);
@@ -238,6 +278,8 @@ export class StorageController {
     console.log(sp);
     const documentFind = await this.usuarioRepository.dataSource.execute(sp);
     console.log(documentFind);
+
+    // # Al retornar el documento buscado, armar path de Spaces [p_n_adjunto] completo a partir de las variables definidas en el .env
 
     return Promise.resolve(documentFind);
 
