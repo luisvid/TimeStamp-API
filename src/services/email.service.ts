@@ -1,6 +1,6 @@
 import {bind, BindingScope} from '@loopback/core';
 import {createTransport} from 'nodemailer';
-import {CodeVerify, EmailTemplate, NodeMailer, Usuario} from '../models';
+import {CodeVerify, EmailSoporte, EmailTemplate, NodeMailer, Usuario} from '../models';
 
 @bind({scope: BindingScope.TRANSIENT})
 export class EmailService {
@@ -68,6 +68,25 @@ export class EmailService {
         <p>Esperamos que la aplicación sea de su agrado y lo ayude en su actividad profesional.</p>
         <p>Saludos cordiales</p>
         <p><strong>No debe responder este correo.</strong></p>
+        <img src="https://documentos.greykoda.com/greykoda/logo-nombre.png" alt="GreyKoda Logo">
+      </div>
+      `,
+    });
+    return transporter.sendMail(emailTemplate);
+  }
+
+  async sendSoporteMail(soporte: EmailSoporte, user: Usuario): Promise<NodeMailer> {
+    const transporter = await EmailService.setupTransporter();
+    const emailTemplate = new EmailTemplate({
+      from: 'sistemas@colmed5.org.ar',
+      to: 'sistemas@colmed5.org.ar',
+      subject: 'SOLICITUD DE SOPORTE - Colmed Mobile',
+      html: `
+      <div>
+        <h2>Para: Soporte</h2>
+        <h2>De: ${user.n_usuario}</h2>
+        <h2>Email: ${soporte.from}</h2>
+        <p>${soporte.text}</p>
         <img src="https://documentos.greykoda.com/greykoda/logo-nombre.png" alt="GreyKoda Logo">
       </div>
       `,

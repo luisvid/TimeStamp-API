@@ -8,7 +8,7 @@ import {UserProfile} from '@loopback/security';
 import * as _ from 'lodash';
 import {v4 as uuidv4} from 'uuid';
 import {PasswordHasherBindings, TokenServiceBindings, UserServiceBindings} from '../keys';
-import {Credentials, KeyAndPassword, NodeMailer, ResetPasswordInit, Usuario} from '../models';
+import {Credentials, EmailSoporte, KeyAndPassword, NodeMailer, ResetPasswordInit, Usuario} from '../models';
 import {UsuarioRepository} from '../repositories';
 import {validateCredentials} from '../services';
 import {EmailService} from '../services/email.service';
@@ -108,12 +108,13 @@ export class UsuarioController {
   }
 
 
+  // jwt token verification
   @authenticate("jwt")
-  @get('/users/me', {
+  @get('/users/verifytoken', {
     security: OPERATION_SECURITY_SPEC,
     responses: {
       '200': {
-        description: 'The current user profile',
+        description: 'JWT Token Verification',
         content: {
           'application/json': {
             schema: getJsonSchemaRef(Usuario),
@@ -126,8 +127,45 @@ export class UsuarioController {
     @inject(AuthenticationBindings.CURRENT_USER)
     currentUser: UserProfile,
   ): Promise<UserProfile> {
-    // console.log(currentUser);
     return Promise.resolve(currentUser);
+  }
+
+  // sed email to soporte
+  @post('/emailsoporte')
+  async emailSoporte(
+    @requestBody() emailSoporte: EmailSoporte,
+  ): Promise<string> {
+    // checks whether email is valid as per regex pattern provided
+    const email = await this.validateEmail(emailSoporte.from);
+
+    // At this point we are dealing with valid email.
+    // Lets check whether there is an associated account
+    const foundUser = await this.usuarioRepository.findOne({
+      where: {email},
+    });
+
+    // No account found
+    if (!foundUser) {
+      throw new HttpErrors.NotFound(
+        'No account associated with the provided email address.',
+      );
+    }
+
+    // Send an email to the user's email address
+    // console.log("Send an email to the user's email address");
+    const nodeMailer: NodeMailer = await this.emailService.sendSoporteMail(
+      emailSoporte, foundUser,
+    );
+
+    // Nodemailer has accepted the request. All good
+    if (nodeMailer.accepted.length) {
+      return 'An email to soporte has been sent from the provided email';
+    }
+
+    // Nodemailer did not complete the request alert the user
+    throw new HttpErrors.InternalServerError(
+      'Error sending reset password email',
+    );
   }
 
 
