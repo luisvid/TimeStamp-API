@@ -217,7 +217,7 @@ export class StorageController {
         content: {
           'application/json': {
             schema: {
-              type: 'object',
+              string: 'nombre',
             },
           },
         },
@@ -227,7 +227,7 @@ export class StorageController {
   })
   async searchFile(
     @inject(AuthenticationBindings.CURRENT_USER) currentUser: UserProfile,
-    nombre: String,
+    @requestBody() nombre: String,
   ): Promise<string> {
 
     // updates DB
