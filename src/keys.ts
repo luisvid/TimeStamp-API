@@ -6,7 +6,7 @@ import {FileUploadHandler} from './types';
 
 export namespace TokenServiceConstants {
   export const TOKEN_SECRET_VALUE = '138asda8213';
-  export const TOKEN_EXPIRES_IN_VALUE = '1h';
+  export const TOKEN_EXPIRES_IN_VALUE = '720h';
 }
 export namespace TokenServiceBindings {
   export const TOKEN_SECRET = BindingKey.create<string>(
