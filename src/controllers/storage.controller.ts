@@ -169,7 +169,7 @@ export class StorageController {
             sp = `exec dbo.sp_bfa_documento_insert
               @p_bfa_hash = "${fileHash}",
               @p_n_documento = "${fileName}",
-              @p_n_adjunto = "${fileLocation.slice(-300)}",
+              @p_n_adjunto = "${fileLocation.slice(-128)}",
               @p_fecha = "${today.toISOString().split('T')[0]}",
               @p_id_usuario = "${currentUser.id}",
               @p_descripcion = "${fileDescription}"`;
