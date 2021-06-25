@@ -1,60 +1,87 @@
-// Uncomment these imports to begin using these cool features!
+// // Uncomment these imports to begin using these cool features!
 
-import {inject} from '@loopback/core';
-import {get, param} from '@loopback/rest';
-import {MyLoginInterface, MyStampHashes, StampApi} from '../services';
+// import {inject} from '@loopback/core';
+// import {get, param} from '@loopback/rest';
+// import {MyLoginInterface, MyStampHashes, StampApi} from '../services';
 
-export class TestExternalApiController {
-  constructor(
-    @inject('services.StampApi')
-    protected stampApiService: StampApi,
-  ) { }
+// export class TestExternalApiController {
+//   constructor(
+//     @inject('services.StampApi')
+//     protected stampApiService: StampApi,
+//   ) { }
+
+// @authenticate("jwt")
+// @post('/filesx', {
+//   responses: {
+//     200: {
+//       content: {
+//         'application/json': {
+//           schema: {
+//             type: 'object',
+//           },
+//         },
+//       },
+//       description: 'Files and fields',
+//     },
+//   },
+// })
+// async fileUploadX(
+//   @requestBody.file()
+//   request: Request,
+//   @inject(RestBindings.Http.RESPONSE) response: Response,
+//   @inject(AuthenticationBindings.CURRENT_USER) currentUser: UserProfile,
+// ): Promise<UserProfile> {
+//   console.log(currentUser.name);
+//   console.log(currentUser.id);
+//   return currentUser;
+// }
 
 
-  @get('/qrstatus/{qr_id}')
-  async getQrStatus(
-    @param.path.string('qr_id') qr_id: string,
-  ): Promise<object> {
-    //Preconditions
-    let hashesx: Array<string> = [];
-    hashesx.push("42199ef61fa2c9c550a93b896e7af84b0c67ff6168c33ac1088e7c379e721f7e");
-    hashesx.push("7d5a862de1db597473e591a6c7f1819cee2a22a1445364f670376f5f7b401fa6");
-    // {"hashes": ["c70da7f172964056f1cc70e454d0bd624ecd9e25f49bb0d0169bec3e76d4e156","c70da7f172964056f1cc70e454d0bd624ecd9e25f49bb0d0169bec3e76d4e156"]}
 
-    let logstr: MyLoginInterface = {
-      email: "pedro@mail.com",
-      password: "pedro1234"
-    }
+//   @get('/qrstatus/{qr_id}')
+//   async getQrStatus(
+//     @param.path.string('qr_id') qr_id: string,
+//   ): Promise<object> {
+//     //Preconditions
+//     let hashesx: Array<string> = [];
+//     hashesx.push("42199ef61fa2c9c550a93b896e7af84b0c67ff6168c33ac1088e7c379e721f7e");
+//     hashesx.push("7d5a862de1db597473e591a6c7f1819cee2a22a1445364f670376f5f7b401fa6");
+//     // {"hashes": ["c70da7f172964056f1cc70e454d0bd624ecd9e25f49bb0d0169bec3e76d4e156","c70da7f172964056f1cc70e454d0bd624ecd9e25f49bb0d0169bec3e76d4e156"]}
 
-    let stampHashes: MyStampHashes = {
-      hashes: hashesx
-    }
+//     let logstr: MyLoginInterface = {
+//       email: "pedro@mail.com",
+//       password: "pedro1234"
+//     }
 
-    console.log(logstr);
-    console.log(stampHashes);
+//     let stampHashes: MyStampHashes = {
+//       hashes: hashesx
+//     }
 
-    const retval = await this.stampApiService.loginx(logstr);
-    console.log(retval);
+//     console.log(logstr);
+//     console.log(stampHashes);
 
-    const retval2 = await this.stampApiService.postStamp(stampHashes);
-    console.log(retval2);
+//     const retval = await this.stampApiService.loginx(logstr);
+//     console.log(retval);
 
-    console.log(retval2.status == 'ok');
+//     const retval2 = await this.stampApiService.postStamp(stampHashes);
+//     console.log(retval2);
 
-    for (let k = 0; k < retval2.txHash.length; k++) {
-      console.log(retval2.txHash[k].status);
+//     console.log(retval2.status == 'ok');
 
-    }
+//     for (let k = 0; k < retval2.txHash.length; k++) {
+//       console.log(retval2.txHash[k].status);
 
-    // for (let i = 0; i < hashesx.length; i++) {
+//     }
 
-    //   let comph = "0x" + hashesx[i];
-    //   console.log(retval2.txHash.find((e: {hash: string;}) => e.hash === comph));
-    //   // console.log(retval2.txHash.includes(comph));
+//     // for (let i = 0; i < hashesx.length; i++) {
 
-    // }
+//     //   let comph = "0x" + hashesx[i];
+//     //   console.log(retval2.txHash.find((e: {hash: string;}) => e.hash === comph));
+//     //   // console.log(retval2.txHash.includes(comph));
 
-    return this.stampApiService.getQrStatus(qr_id);
-  }
+//     // }
 
-}
+//     return this.stampApiService.getQrStatus(qr_id);
+//   }
+
+// }

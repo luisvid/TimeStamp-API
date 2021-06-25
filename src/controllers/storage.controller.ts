@@ -48,38 +48,6 @@ export class StorageController {
 
   ) { }
 
-
-  @authenticate("jwt")
-  @post('/filesx', {
-    responses: {
-      200: {
-        content: {
-          'application/json': {
-            schema: {
-              type: 'object',
-            },
-          },
-        },
-        description: 'Files and fields',
-      },
-    },
-  })
-  async fileUploadX(
-    @requestBody.file()
-    request: Request,
-    @inject(RestBindings.Http.RESPONSE) response: Response,
-    @inject(AuthenticationBindings.CURRENT_USER) currentUser: UserProfile,
-  ): Promise<UserProfile> {
-
-
-    console.log(currentUser.name);
-    console.log(currentUser.id);
-
-
-    return currentUser;
-  }
-
-
   // file upload to S3
   // params: name & desc
   // http://localhost:3000/files/?name=unNombre&desc=UnaDescripcion
