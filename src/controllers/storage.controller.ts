@@ -1,7 +1,7 @@
 import {authenticate, AuthenticationBindings} from '@loopback/authentication'
 import {inject} from '@loopback/core'
 import {repository} from '@loopback/repository'
-import {post, Request, requestBody, Response, RestBindings} from '@loopback/rest'
+import {get, param, post, Request, requestBody, Response, RestBindings} from '@loopback/rest'
 // import {UserProfile} from 'aws-sdk/clients/opsworks'
 import {UserProfile} from '@loopback/security'
 import AWS from 'aws-sdk'
@@ -211,13 +211,13 @@ export class StorageController {
     )*/
 
   @authenticate("jwt")
-  @post('/search_file', {
+  @get('/files/{fileName}', {
     responses: {
       200: {
         content: {
           'application/json': {
             schema: {
-              string: 'nombre',
+              string: 'fileName',
             },
           },
         },
@@ -227,12 +227,12 @@ export class StorageController {
   })
   async searchFile(
     @inject(AuthenticationBindings.CURRENT_USER) currentUser: UserProfile,
-    @requestBody() nombre: String,
+    @param.path.string('fileName') fileName: string,
   ): Promise<string> {
 
     // updates DB
     let sp = `exec dbo.sp_bfa_documento_select
-    @p_n_documento = "${nombre}",
+    @p_n_documento = "${fileName}",
     @p_id_usuario = "${currentUser.id}"`;
 
     console.log(sp);
