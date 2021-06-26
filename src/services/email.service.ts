@@ -38,7 +38,7 @@ export class EmailService {
         <h2>${user.n_usuario}</h2>
         <p>Ud. ha solicitado cambio de clave como usuario de Colmed Mobile.</p>
         <p>Para modificar debe ingresar en
-        <a href="${process.env.APPLICATION_URL}/reset-password-finish.html?resetKey=${user.resetKey}" target="_blank">Cambiar contraseña</a>
+        <a href=https://colmedmobile.com/reset-password-finish?${user.resetKey}"target="_blank">Cambiar contraseña</a>
         <p>Y a continuación, deberá ingresar los datos que pide la página.</p>
         <p>Saludos cordiales</p>
         <p><strong>Cualquier inconveniente puede escribir a este correo.</strong></p>

@@ -3,7 +3,6 @@ import {OPERATION_SECURITY_SPEC} from '@loopback/authentication-jwt';
 import {inject} from '@loopback/core';
 import {repository} from '@loopback/repository';
 import {get, getJsonSchemaRef, HttpErrors, post, put, requestBody} from '@loopback/rest';
-// import {UserProfile} from 'aws-sdk/clients/opsworks';
 import {UserProfile} from '@loopback/security';
 import * as _ from 'lodash';
 import {v4 as uuidv4} from 'uuid';
@@ -15,6 +14,7 @@ import {EmailService} from '../services/email.service';
 import {BcryptHasher} from '../services/hash.password';
 import {JWTService} from '../services/jwt-service';
 import {MyUserService} from '../services/user-service';
+// import {UserProfile} from 'aws-sdk/clients/opsworks';
 
 export class UsuarioController {
   constructor(
@@ -96,17 +96,11 @@ export class UsuarioController {
   ): Promise<{token: string}> {
     // make sure user exist,password should be valid
     const user = await this.userService.verifyCredentials(credentials);
-    // console.log(user);
-
     const userProfile = await this.userService.convertToUserProfile(user);
-    // console.log(userProfile);
-
     // create a JSON Web Token based on the user profile
     const token = await this.jwtService.generateToken(userProfile);
-
     return Promise.resolve({token: token})
   }
-
 
   // jwt token verification
   @authenticate("jwt")
@@ -147,7 +141,7 @@ export class UsuarioController {
     // No account found
     if (!foundUser) {
       throw new HttpErrors.NotFound(
-        'No account associated with the provided email address.',
+        'No hay una cuenta asociada con la dirección de correo electrónico proporcionada.',
       );
     }
 
@@ -159,12 +153,12 @@ export class UsuarioController {
 
     // Nodemailer has accepted the request. All good
     if (nodeMailer.accepted.length) {
-      return 'An email to soporte has been sent from the provided email';
+      return 'Se ha enviado un correo electrónico a soporte desde el correo electrónico proporcionado.';
     }
 
     // Nodemailer did not complete the request alert the user
     throw new HttpErrors.InternalServerError(
-      'Error sending reset password email',
+      'Error al enviar el correo electrónico para restablecer la contraseña.',
     );
   }
 
@@ -186,7 +180,7 @@ export class UsuarioController {
     // No account found
     if (!foundUser) {
       throw new HttpErrors.NotFound(
-        'No account associated with the provided email address.',
+        'No hay una cuenta asociada con la dirección de correo electrónico proporcionada.',
       );
     }
 
@@ -211,16 +205,14 @@ export class UsuarioController {
 
     // Nodemailer has accepted the request. All good
     if (nodeMailer.accepted.length) {
-      return 'An email with password reset instructions has been sent to the provided email';
+      return 'Se ha enviado un correo electrónico con instrucciones para restablecer la contraseña al correo electrónico proporcionado.';
     }
 
     // Nodemailer did not complete the request alert the user
     throw new HttpErrors.InternalServerError(
-      'Error sending reset password email',
+      'Error al enviar el correo electrónico para restablecer la contraseña',
     );
   }
-
-
 
   @put('/reset-password/finish')
   async resetPasswordFinish(
@@ -237,7 +229,7 @@ export class UsuarioController {
     // No user account found
     if (!foundUser) {
       throw new HttpErrors.NotFound(
-        'No associated account for the provided reset key',
+        'No hay una cuenta asociada con la reset key proporcionada.',
       );
     }
 
@@ -260,19 +252,19 @@ export class UsuarioController {
       return e;
     }
 
-    return 'Password reset request completed successfully';
+    return 'La solicitud de restablecimiento de contraseña se completó correctamente';
   }
 
   async validateKeyPassword(keyAndPassword: KeyAndPassword): Promise<KeyAndPassword> {
     if (!keyAndPassword.password || keyAndPassword.password.length < 8) {
       throw new HttpErrors.UnprocessableEntity(
-        'Password must be minimum of 8 characters',
+        'La contraseña debe tener un mínimo de 8 caracteres',
       );
     }
 
     if (keyAndPassword.password !== keyAndPassword.confirmPassword) {
       throw new HttpErrors.UnprocessableEntity(
-        'Password and confirmation password do not match',
+        'La contraseña y la contraseña de confirmación no coinciden',
       );
     }
 
