@@ -45,9 +45,9 @@ export class PingController {
     // Reply with a greeting, the current time, the url, and request headers
     return {
       greeting: 'Hello from LoopBack',
-      date: new Date(),
-      url: this.req.url,
-      headers: Object.assign({}, this.req.headers),
+      //date: new Date(),
+      //url: this.req.url,
+      //headers: Object.assign({}, this.req.headers),
     };
   }
 }

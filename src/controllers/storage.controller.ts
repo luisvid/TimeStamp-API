@@ -172,117 +172,124 @@ export class StorageController {
     // La verificación se puede hacer luego de que la TX sea insertada en un bloque, por lo que
     // se debe esperar al menos 5 segundos, antes de invocar al método verify
 
-    // ESPERAR 5 SEGUNDOS
+    // TODO: ESPERAR 10 SEGUNDOS PARA DAR TIEMPO A QUE LAS TRANSACCIONES ENVIADAS SEAN INCLUIDAS EN UN BLOQUE
 
     let limiteVueltas = 15; // Establecemos un límite de la máxima cantidad de veces que se hará el do-while
     let acumuladorVueltas = 0; // Variable de corte de do-while
     let finishDoWhile = false;
     let txVerify;
 
-    /*do {
 
-      // Por cada hash enviado
-      stampHashes.forEach(hash: => {
+
+    // Por cada hash enviado
+    allHashes.forEach(hash: => { // TODO: VERIFICAR SI ESTE FOREACH EN TS ES CORRECTO
+      do {
         // Invocamos al metodo verify por GET EJEMPLO: http://nodocolmed.greykoda.com:3000/verify/HASH
-        txVerify = await this.stampApiService.getVerify(hash);
-
-        if(txVerify.data.status == 'completed'){
-          finishDoWhile = true;
-        } else {
-          acumuladorVueltas++;
+        // Es indistinto enviar con 0x o sin 0x, el metodo verify lo interpera igual. Lo probé con insomnia
+        txVerify = await this.stampApiService.getVerify(hash); // TODO: PROGRAMAR ESTE METODO
+        /* EJEMPLO DE RESPUESTA DE ENDPOINT Verify PARA UNA VERIFICACION -> OK
+        {
+          "stamped": true,
+          "stamps": [
+            {
+              "whostamped": "0x0CD8D9d579290AB80b9588B9552b105419A52946",
+              "blocknumber": "17205337",
+              "blocktimestamp": 1624418297
+            }
+          ]
         }
+        */
+        /* EJEMPLO DE RESPUESTA DE ENDPOINT Verify PARA UNA VERIFICACION -> ERROR
+        {
+           "stamped": false,
+           "stamps": []
+         }
+        */
+        // 5- SP Update DB
+        // Revisar objeto data para ver el status
+        if(txVerify.data.stamped){
+      finishDoWhile = true;
+      // updates DB
+      sp = `exec dbo.sp_bfa_documento_update
+                      @p_id_documento = "${hashesID[i].value}",
+                      @p_bfa_block_number = "${txVerify.data.stamps[0].blocknumber}",
+                      @p_bfa_block_timestamp = "${txVerify.data.stamps[0].blocktimestamp}",
+                      @p_bfa_who_stamped = "${txVerify.data.stamps[0].whostamped}"`;
 
-        // ESPERAR 1 SEGUNDO
-
-        if (acumuladorVueltas > limiteVueltas) {
-          finishDoWhile = true;
-        }
-      });
-    } while(!finishDoWhile);*/
-
-    // NO IMPORTA SI LA API DEMORA EN TERMINAR LA EJECUCIÓN, ESO SERÁ UN PROBLEMA DEL FRONTEND !! YA ESTÁ HABLADO CON LEO
-
-    // 5- SP Update DB
-    // ACTUALIZAR BD SI LA COMPROBACION DEL VERIFY DIO COMPLETED
-
-    if (txRetVal.status == 'ok') { // MODIFICAR ESTA CONDICIÓN
-      //Itero el array de hashes enviado
-      console.log("estado OK, itero");
-      for (let i = 0; i < hashesID.length; i++) {
-        let comph = "0x" + hashesID[i].key;  //agrego 0x para comparar
-        let txOjb = txRetVal.txHash.find((e: {hash: string;}) => e.hash === comph);
-
-        console.log(txOjb);
-
-        if (txOjb != null) {  //chesks for null and undefined
-          // updates DB
-          sp = `exec dbo.sp_bfa_documento_update
-            @p_id_documento = "${hashesID[i].value}",
-            @p_bfa_block_number = "${txOjb.block_number._hex}", // OBTENER DE txVerify
-            @p_bfa_block_timestamp = "${today}", // OBTENER DE txVerify
-            @p_bfa_who_stamped = "${currentUser.name}"`; // OBTENER DE txVerify
-
-          console.log(sp);
-          const spUpdateRetVal = await this.usuarioRepository.dataSource.execute(sp);
-          console.log(spUpdateRetVal);
-        }
-      }
+      console.log(sp);
+      const spUpdateRetVal = await this.usuarioRepository.dataSource.execute(sp);
+      console.log(spUpdateRetVal);
+    } else {
+      acumuladorVueltas++;
     }
 
-    // Retorno parcial al fron-ent ->
-    const strRet = 'DOCUMENTO UPLOAD OK, DOC SAVE DB OK, DOC STAMPED PENDING'
-    arrLocations.push(strRet);
+    //TODO: ESPERAR 1 SEGUNDO PARA NO LLAMAR TANTAS VECES AL ENDPOINT DE VERIFICACION
 
-    return Promise.resolve(arrLocations);
+    if (acumuladorVueltas > limiteVueltas) {
+      finishDoWhile = true;
+    }
+  } while(!finishDoWhile); // TODO: COMPROBAR SI EL DO-WHILE EN TS ES CORRECTO
+});
+
+
+
+// NO IMPORTA SI LA API DEMORA EN TERMINAR LA EJECUCIÓN, ESO SERÁ UN PROBLEMA DEL FRONTEND !! YA ESTÁ HABLADO CON LEO
+
+
+// Retorno parcial al fron-ent ->
+const strRet = 'DOCUMENTO UPLOAD OK, DOC SAVE DB OK, DOC STAMPED OK'
+arrLocations.push(strRet);
+
+return Promise.resolve(arrLocations);
   }
 
 
 
-  // endpoint de búsqueda por archivo
-  // todos los docs del usuario usuarioID (obtenido de TOKEN)
-  // A futuro permitir filtros, límites, fechas
-  // LA SP hace internamente el like
-  /*ALTER Procedure [dbo].[sp_bfa_documento_select](
-    @p_bfa_block_number varchar(100) = 0, // Si mandamos 0, es xq queremos los que estan sin estampar, sin importar usuario
-    @p_id_documento int = Null,
-    @p_n_documento varchar(200) = Null,
-    @p_id_usuario int = NUll, // Tomar desde el token
-    @p_descripcion varchar(400) = Null
-    )*/
+// endpoint de búsqueda por archivo
+// todos los docs del usuario usuarioID (obtenido de TOKEN)
+// A futuro permitir filtros, límites, fechas
+// LA SP hace internamente el like
+/*ALTER Procedure [dbo].[sp_bfa_documento_select](
+  @p_bfa_block_number varchar(100) = 0, // Si mandamos 0, es xq queremos los que estan sin estampar, sin importar usuario
+  @p_id_documento int = Null,
+  @p_n_documento varchar(200) = Null,
+  @p_id_usuario int = NUll, // Tomar desde el token
+  @p_descripcion varchar(400) = Null
+  )*/
 
-  @authenticate("jwt")
-  @get('/files/{fileName}', {
-    responses: {
-      200: {
-        content: {
-          'application/json': {
-            schema: {
-              string: 'fileName',
-            },
+@authenticate("jwt")
+@get('/files/{fileName}', {
+  responses: {
+    200: {
+      content: {
+        'application/json': {
+          schema: {
+            string: 'fileName',
           },
         },
-        description: 'Search files',
       },
+      description: 'Search files',
     },
-  })
-  async searchFile(
+  },
+})
+async searchFile(
     @inject(AuthenticationBindings.CURRENT_USER) currentUser: UserProfile,
     @param.path.string('fileName') fileName: string,
-  ): Promise<string> {
+  ): Promise < string > {
 
-    // updates DB
-    let sp = `exec dbo.sp_bfa_documento_select
+  // updates DB
+  let sp = `exec dbo.sp_bfa_documento_select
     @p_n_documento = "${fileName}",
     @p_id_usuario = "${currentUser.id}"`;
 
-    console.log(sp);
-    const documentFind = await this.usuarioRepository.dataSource.execute(sp);
-    console.log(documentFind);
+  console.log(sp);
+  const documentFind = await this.usuarioRepository.dataSource.execute(sp);
+  console.log(documentFind);
 
-    // # Al retornar el documento buscado, armar path de Spaces [p_n_adjunto] completo a partir de las variables definidas en el .env
+  // # Al retornar el documento buscado, armar path de Spaces [p_n_adjunto] completo a partir de las variables definidas en el .env
 
-    return Promise.resolve(documentFind);
+  return Promise.resolve(documentFind);
 
-  }
+}
 
 }
