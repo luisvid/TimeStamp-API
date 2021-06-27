@@ -170,7 +170,7 @@ export class StorageController {
 
     // ESPERAR 10 SEGUNDOS PARA DAR TIEMPO A QUE LAS TRANSACCIONES ENVIADAS SEAN INCLUIDAS EN UN BLOQUE
     console.log("espera 10 segundos");
-    await new Promise(f => setTimeout(f, 10000));
+    await new Promise(f => setTimeout(f, 15000));
     console.log("terminan 10 segundos");
 
     // Por cada hash enviado
@@ -201,7 +201,7 @@ export class StorageController {
         }
 
         // ESPERAR 1 SEGUNDO PARA NO LLAMAR TANTAS VECES AL ENDPOINT DE VERIFICACION
-        await new Promise(f => setTimeout(f, 1000));
+        await new Promise(f => setTimeout(f, 5000));
 
         if (acumuladorVueltas > limiteVueltas) {
           finishDoWhile = true;
