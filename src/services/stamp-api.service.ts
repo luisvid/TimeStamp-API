@@ -9,6 +9,7 @@ export interface StampApi {
   getQrStatus(qr_id: string): Promise<object>;
   loginx(arg: MyLoginInterface): Promise<any>;
   postStamp(arg: MyStampHashes): Promise<any>;
+  getVerify(hash: string): Promise<any>;
 }
 
 export interface MyStampHashes {

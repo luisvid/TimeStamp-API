@@ -42,6 +42,15 @@ const config = {
         postStamp: ['arg'],
       },
     },
+    {
+      template: {
+        method: 'GET',
+        url: 'http://nodocolmed.greykoda.com:3000/verify/{hash}',
+      },
+      functions: {
+        getVerify: ['hash'],
+      },
+    },
   ],
 };
 

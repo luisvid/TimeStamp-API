@@ -81,10 +81,11 @@ export class StorageController {
     let fileLocation = "";
     let allHashes: Array<string> = [];
     let arrLocations: Array<string> = [];
-    // let hashesID: Array<string | number> = [];
     let hashesID: {key: string, value: string}[] = [];
-    let today = new Date();
-
+    let today = new Date().toISOString().slice(0, 19).replace('T', ' ');
+    let limiteVueltas = 15; // Establecemos un límite de la máxima cantidad de veces que se hará el do-while
+    let acumuladorVueltas = 0; // Variable de corte de do-while
+    let finishDoWhile = false;
 
     console.log(currentUser);
     console.log("Nombre Archivo: " + fileName);
@@ -127,7 +128,6 @@ export class StorageController {
 
             try {
               const stored = await s3.upload(params).promise()
-              console.log(stored);
               res.push(stored)
               fileLocation = stored.Location;
               arrLocations.push(fileLocation);
@@ -137,108 +137,79 @@ export class StorageController {
 
             // 3- SP insert DB
             sp = `exec dbo.sp_bfa_documento_insert
-              @p_bfa_hash = "${fileHash}",
-              @p_n_documento = "${fileName}",
-              @p_n_adjunto = "${fileLocation.slice(-69)}",
-              @p_fecha = "${today.toISOString().split('T')[0]}",
-              @p_id_usuario = "${currentUser.id}",
-              @p_descripcion = "${fileDescription}"`;
-
-            const spInsertRetVal = await this.usuarioRepository.dataSource.execute(sp);
-            console.log(spInsertRetVal[0].id);
-            hashesID.push({key: fileHash, value: spInsertRetVal[0].id});
+                  @p_bfa_hash = "${fileHash}",
+                  @p_n_documento = "${fileName}",
+                  @p_n_adjunto = "${fileLocation.slice(-69)}",
+                  @p_fecha = "${today}",
+                  @p_id_usuario = "${currentUser.id}",
+                  @p_descripcion = "${fileDescription}"`;
+            try {
+              console.log(sp);
+              const spInsertRetVal = await this.usuarioRepository.dataSource.execute(sp);
+              hashesID.push({key: fileHash, value: spInsertRetVal[0].id});
+            } catch (err) {
+              reject(err)
+            }
 
           }
           resolve(res)
         }
       })
     })
-    console.log('fin upload S3');
-    console.log(hashesID);
+    console.log('Upload S3 y DB Insert OK');
 
     // 4 - Call endpoints nodo sellador
     let stampHashes: MyStampHashes = {
       hashes: allHashes
     }
-    console.log(stampHashes);
+
     const txRetVal = await this.stampApiService.postStamp(stampHashes);
+    console.log('hashes stampados');
     console.log(txRetVal);
 
 
-    //     // Luego de sellar, debemos invocar al metodo verify para obtener los siguientes datos
-    //     // p_bfa_block_number
-    //     // p_bfa_block_timestamp
-    //     // p_bfa_who_stamped
+    // ESPERAR 10 SEGUNDOS PARA DAR TIEMPO A QUE LAS TRANSACCIONES ENVIADAS SEAN INCLUIDAS EN UN BLOQUE
+    console.log("espera 10 segundos");
+    await new Promise(f => setTimeout(f, 10000));
+    console.log("terminan 10 segundos");
 
-    //     // La verificación se puede hacer luego de que la TX sea insertada en un bloque, por lo que
-    //     // se debe esperar al menos 5 segundos, antes de invocar al método verify
+    // Por cada hash enviado
+    for (var i = 0; i < allHashes.length; i++) {
+      do {
+        console.log("veriifica hash: " + allHashes[i])
+        // invoca http://nodocolmed.greykoda.com:3000/verify/HASH
+        const txVerify = await this.stampApiService.getVerify(allHashes[i]);
 
-    //     // TODO: ESPERAR 10 SEGUNDOS PARA DAR TIEMPO A QUE LAS TRANSACCIONES ENVIADAS SEAN INCLUIDAS EN UN BLOQUE
-    // console.log("espera 10 segundos");
-    // await new Promise(f => setTimeout(f, 10000));
-    // console.log("terminan 10 segundos");
+        console.log('verificación ');
+        console.log(txVerify.stamped);
 
+        // 5- SP Update DB
+        // Revisar objeto data para ver el status
+        if (txVerify.stamped) {
+          finishDoWhile = true;
+          // updates DB
+          sp = `exec dbo.sp_bfa_documento_update
+                @p_id_documento = "${hashesID[i].value}",
+                @p_bfa_block_number = "${txVerify.stamps[0].blocknumber}",
+                @p_bfa_block_timestamp = "${txVerify.stamps[0].blocktimestamp}",
+                @p_bfa_who_stamped = "${txVerify.stamps[0].whostamped}"`;
 
-    //     let limiteVueltas = 15; // Establecemos un límite de la máxima cantidad de veces que se hará el do-while
-    //     let acumuladorVueltas = 0; // Variable de corte de do-while
-    //     let finishDoWhile = false;
-    //     let txVerify;
+          const spUpdateRetVal = await this.usuarioRepository.dataSource.execute(sp);
+          console.log(spUpdateRetVal);
+        } else {
+          acumuladorVueltas++;
+        }
 
+        // ESPERAR 1 SEGUNDO PARA NO LLAMAR TANTAS VECES AL ENDPOINT DE VERIFICACION
+        await new Promise(f => setTimeout(f, 1000));
 
+        if (acumuladorVueltas > limiteVueltas) {
+          finishDoWhile = true;
+        }
 
-    //     // Por cada hash enviado
-    //     allHashes.forEach(hash: => { // TODO: VERIFICAR SI ESTE FOREACH EN TS ES CORRECTO
-    //       do {
-    //         // Invocamos al metodo verify por GET EJEMPLO: http://nodocolmed.greykoda.com:3000/verify/HASH
-    //         // Es indistinto enviar con 0x o sin 0x, el metodo verify lo interpera igual. Lo probé con insomnia
-    //         txVerify = await this.stampApiService.getVerify(hash); // TODO: PROGRAMAR ESTE METODO
-    //         /* EJEMPLO DE RESPUESTA DE ENDPOINT Verify PARA UNA VERIFICACION -> OK
-    //         {
-    //           "stamped": true,
-    //           "stamps": [
-    //             {
-    //               "whostamped": "0x0CD8D9d579290AB80b9588B9552b105419A52946",
-    //               "blocknumber": "17205337",
-    //               "blocktimestamp": 1624418297
-    //             }
-    //           ]
-    //         }
-    //         */
-    //         /* EJEMPLO DE RESPUESTA DE ENDPOINT Verify PARA UNA VERIFICACION -> ERROR
-    //         {
-    //            "stamped": false,
-    //            "stamps": []
-    //          }
-    //         */
-    //         // 5- SP Update DB
-    //         // Revisar objeto data para ver el status
-    //         if(txVerify.data.stamped){
-    //       finishDoWhile = true;
-    //       // updates DB
-    //       sp = `exec dbo.sp_bfa_documento_update
-    //                       @p_id_documento = "${hashesID[i].value}",
-    //                       @p_bfa_block_number = "${txVerify.data.stamps[0].blocknumber}",
-    //                       @p_bfa_block_timestamp = "${txVerify.data.stamps[0].blocktimestamp}",
-    //                       @p_bfa_who_stamped = "${txVerify.data.stamps[0].whostamped}"`;
-
-    //       console.log(sp);
-    //       const spUpdateRetVal = await this.usuarioRepository.dataSource.execute(sp);
-    //       console.log(spUpdateRetVal);
-    //     } else {
-    //       acumuladorVueltas++;
-    //     }
-
-    //     //TODO: ESPERAR 1 SEGUNDO PARA NO LLAMAR TANTAS VECES AL ENDPOINT DE VERIFICACION
-
-    //     if (acumuladorVueltas > limiteVueltas) {
-    //       finishDoWhile = true;
-    //     }
-    //   } while(!finishDoWhile); // TODO: COMPROBAR SI EL DO-WHILE EN TS ES CORRECTO
-    // });
-
-
-
-    // NO IMPORTA SI LA API DEMORA EN TERMINAR LA EJECUCIÓN, ESO SERÁ UN PROBLEMA DEL FRONTEND !! YA ESTÁ HABLADO CON LEO
+      } while (!finishDoWhile);
+    }; // end for
+    console.log('Verify  OK');
 
 
     // Retorno parcial al fron-ent ->
