@@ -1,27 +1,26 @@
 import {inject, lifeCycleObserver, LifeCycleObserver} from '@loopback/core';
 import {juggler} from '@loopback/repository';
 
-// ** _colmed remote
+
+const dbDatabase = process.env.DB_DATABASE;
+const dbHost = process.env.DB_HOST;
+const dbPort = parseInt(process.env.DB_PORT || '')
+const dbPortN = Number.isInteger(dbPort) ? dbPort : 21799
+const dbUser = process.env.DB_USER;
+const dbPassword = process.env.DB_PASSWORD;
+
+
+// ** db config
 const config = {
   name: 'mssql',
   connector: 'mssql',
-  host: '104.248.127.17',
-  port: 21799,
-  user: 'renzo_api',
-  password: 'ro_2021!',
-  database: '_colmed'
+  host: dbHost,
+  port: dbPortN,
+  user: dbUser,
+  password: dbPassword,
+  database: dbDatabase
 };
 
-// ** _colmed localhost
-// const config = {
-//   name: 'mssql',
-//   connector: 'mssql',
-//   host: 'localhost',
-//   port: 1433,
-//   user: 'sa',
-//   password: 'Brocal5813',
-//   database: '_colmed'
-// };
 
 // Observe application's life cycle to disconnect the datasource when
 // application is stopped. This allows the application to be shut down
