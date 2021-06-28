@@ -116,7 +116,7 @@ export class StorageController {
             fileHash = getHashFromFile(file);
             allHashes.push(fileHash)
             fileName = request.query.name ?? file.originalname;
-            fileName = fileName + cont + file.originalname.slice(-4);
+            fileName = fileName + cont; //+ file.originalname.slice(-4);
             cont++;
 
             const params = {
@@ -171,7 +171,6 @@ export class StorageController {
     // ESPERAR 10 SEGUNDOS PARA DAR TIEMPO A QUE LAS TRANSACCIONES ENVIADAS SEAN INCLUIDAS EN UN BLOQUE
     console.log("espera 10 segundos");
     await new Promise(f => setTimeout(f, 15000));
-    console.log("terminan 10 segundos");
 
     // Por cada hash enviado
     for (var i = 0; i < allHashes.length; i++) {
@@ -201,6 +200,7 @@ export class StorageController {
         }
 
         // ESPERAR 1 SEGUNDO PARA NO LLAMAR TANTAS VECES AL ENDPOINT DE VERIFICACION
+        console.log("esperoa de 5 segundos antes de reintentar");
         await new Promise(f => setTimeout(f, 5000));
 
         if (acumuladorVueltas > limiteVueltas) {
@@ -209,8 +209,8 @@ export class StorageController {
 
       } while (!finishDoWhile);
     }; // end for
-    console.log('Verify  OK');
 
+    console.log('Verify  OK');
 
     // Retorno parcial al fron-ent ->
     const strRet = 'DOCUMENTO UPLOAD OK, DOC SAVE DB OK, DOC STAMPED OK'
